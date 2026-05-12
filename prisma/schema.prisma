@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id       String @id @default(uuid())
+  name     String
+  email    String @unique
+  password String
+
+  categories Category[]
+  tasks      Task[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Category {
+  id    String @id @default(uuid())
+  name  String
+  color String
+  icon  String
+
+  isGlobal Boolean @default(false)
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tasks Task[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("categories")
+}
+
+model Task {
+  id           String     @id @default(uuid())
+  title        String
+  note         String?    @db.Text
+  type         TaskType   @default(SINGLE)
+  answerType   AnswerType @default(YES_NO)
+  status       TaskStatus @default(PENDING)
+  scheduledFor DateTime
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  recurrence Recurrence?
+
+  items TaskItem[]
+
+  completions TaskCompletion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([type])
+  @@index([userId, type])
+  @@map("tasks")
+}
+
+enum TaskType {
+  SINGLE
+  RECURRING
+}
+
+enum AnswerType {
+  YES_NO
+  CHECKLIST
+}
+
+enum TaskStatus {
+  PENDING
+  COMPLETED
+  ARCHIVED
+}
+
+model Recurrence {
+  id     String @id @default(uuid())
+  taskId String @unique
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  pattern RecurrencePattern
+
+  everyNDays Int?
+
+  daysOfWeek  Int[]
+  everyNWeeks Int?
+
+  daysOfMonth  Int[]
+  everyNMonths Int?
+
+  specificDates String[]
+  everyNYears   Int?
+
+  timesPerPeriod Int?
+  periodType     PeriodType?
+
+  startDate DateTime  @default(now())
+  endDate   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("recurrences")
+}
+
+enum RecurrencePattern {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+  CUSTOM
+}
+
+enum PeriodType {
+  WEEK
+  MONTH
+  YEAR
+}
+
+model TaskItem {
+  id     String @id @default(uuid())
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  title     String
+  order     Int
+  completed Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([taskId])
+  @@map("task_items")
+}
+
+model TaskCompletion {
+  id     String @id @default(uuid())
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  completedAt DateTime @default(now())
+
+  note String? @db.Text
+
+  answer Boolean?
+
+  itemsSnapshot Json?
+
+  @@index([taskId])
+  @@index([taskId, completedAt])
+  @@map("task_completions")
+}
