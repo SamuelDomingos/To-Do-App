@@ -23,22 +23,32 @@ import DialogSelectCategory from "../dialogSelectCategory"
 import useGetCategory from "@/hooks/useGetCategory"
 import * as Icons from "lucide-react"
 import type { LucideIcon } from "lucide-react"
+import { CreateTaskDTO } from "@/lib/validations/task"
 
-export default function DialogCreateSimpleTask({
+export default function DialogFormSimpleTask({
   open,
   onOpenChange,
+  mode = "create",
+  taskId,
+  initialData,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  mode?: "create" | "edit"
+  taskId?: string
+  initialData?: Partial<CreateTaskDTO>
 }) {
   const [openCategoryDialog, setOpenCategoryDialog] = useState(false)
 
-  const { categories } = useGetCategory()
-
   const { form, handleSubmit, isLoading, itemsFieldArray } = useTaskForm({
-    mode: "create",
+    mode,
+    taskId,
+    initialData,
     onOpenChange,
   })
+
+  
+  const { categories } = useGetCategory()
 
   const selectedCategory = form.watch("categoryId")
   const items = form.watch("items")
@@ -47,21 +57,25 @@ export default function DialogCreateSimpleTask({
     (c) => c.id === selectedCategory
   )
 
-  // Pegar o ícone da categoria
   const IconComponent = selectedCategoryData?.icon
     ? ((Icons[selectedCategoryData.icon as keyof typeof Icons] ||
-        Folder) as typeof LucideIcon)
+        Folder) as LucideIcon)
     : Folder
+
+  const isEditMode = mode === "edit"
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Criar Tarefa Simples</DialogTitle>
+            <DialogTitle>
+              {isEditMode ? "Editar Tarefa" : "Criar Tarefa Simples"}
+            </DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Campo Título */}
             <Controller
               name="title"
               control={form.control}
@@ -83,6 +97,7 @@ export default function DialogCreateSimpleTask({
               )}
             />
 
+            {/* Campo Categoria */}
             <div className="space-y-2">
               <FieldLabel>Categoria</FieldLabel>
               <Button
@@ -110,6 +125,7 @@ export default function DialogCreateSimpleTask({
               </Button>
             </div>
 
+            {/* Campo Data */}
             <div className="space-y-2">
               <FieldLabel>Data</FieldLabel>
               <Controller
@@ -126,6 +142,7 @@ export default function DialogCreateSimpleTask({
               />
             </div>
 
+            {/* Campo Subitens */}
             <div className="space-y-2">
               <FieldLabel>Subitens</FieldLabel>
               <div className="space-y-2">
@@ -170,7 +187,7 @@ export default function DialogCreateSimpleTask({
               </Button>
             </div>
 
-            {/* Notas */}
+            {/* Campo Notas */}
             <Controller
               name="note"
               control={form.control}
@@ -195,6 +212,7 @@ export default function DialogCreateSimpleTask({
               )}
             />
 
+            {/* Footer */}
             <DialogFooter>
               <Button
                 type="button"
@@ -204,22 +222,28 @@ export default function DialogCreateSimpleTask({
                 Cancelar
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Salvando..." : "Criar tarefa"}
+                {isLoading
+                  ? "Salvando..."
+                  : isEditMode
+                    ? "Salvar Alterações"
+                    : "Criar tarefa"}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
-      <DialogSelectCategory
-        open={openCategoryDialog}
-        onOpenChange={setOpenCategoryDialog}
-        categories={categories}
-        onSelect={(categoryId) => {
-          form.setValue("categoryId", categoryId)
-          setOpenCategoryDialog(false)
-        }}
-      />
+      {openCategoryDialog && (
+        <DialogSelectCategory
+          open={openCategoryDialog}
+          categories={categories}
+          onOpenChange={setOpenCategoryDialog}
+          selectedCategoryId={selectedCategory}
+          onSelect={(categoryId) => {
+            form.setValue("categoryId", categoryId)
+          }}
+        />
+      )}
     </>
   )
 }

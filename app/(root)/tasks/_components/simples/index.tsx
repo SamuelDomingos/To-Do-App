@@ -12,15 +12,14 @@ import {
   ItemTitle,
 } from "@/components/ui/item"
 
-import DialogItemSimples from "./dialogItemSimples"
-
 import { SimpleTask } from "@/lib/api/types/tasks.types"
 
 import { formattedDate } from "@/lib/utils"
 
 import * as Icons from "lucide-react"
-
 import { LucideIcon } from "lucide-react"
+
+import DialogFormSimpleTask from "@/components/createTask/dialog-form-simple-task"
 
 const SimpleTasks = ({ simpleTasks }: { simpleTasks: SimpleTask[] }) => {
   const [selectedTask, setSelectedTask] = useState<SimpleTask | null>(null)
@@ -71,10 +70,7 @@ const SimpleTasks = ({ simpleTasks }: { simpleTasks: SimpleTask[] }) => {
                           backgroundColor: task.category.color,
                         }}
                       >
-                        <Icon
-                          className="h-5 w-5 text-black"
-                          strokeWidth={2.5}
-                        />
+                        <Icon className="h-6! w-6!" />
                       </ItemMedia>
 
                       <ItemContent>
@@ -91,10 +87,29 @@ const SimpleTasks = ({ simpleTasks }: { simpleTasks: SimpleTask[] }) => {
         ))}
       </div>
 
-      <DialogItemSimples
-        selectedTask={selectedTask}
-        setSelectedTask={setSelectedTask}
-      />
+      {selectedTask && (
+        <DialogFormSimpleTask
+          open={!!selectedTask}
+          onOpenChange={() => {
+            setSelectedTask(null)
+          }}
+          mode="edit"
+          taskId={selectedTask?.id}
+          initialData={
+            selectedTask
+              ? {
+                  title: selectedTask.title,
+                  note: selectedTask.note || "",
+                  categoryId: selectedTask.category.id,
+                  scheduledFor: selectedTask.scheduledFor
+                    ? new Date(selectedTask.scheduledFor).toISOString()
+                    : "",
+                  items: selectedTask.items || [],
+                }
+              : undefined
+          }
+        />
+      )}
     </>
   )
 }

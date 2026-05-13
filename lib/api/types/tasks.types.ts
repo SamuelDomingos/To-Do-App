@@ -14,6 +14,7 @@ export interface TaskItem {
 
 export interface Recurrence {
   id: string
+  category: Category
   pattern: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY' | 'CUSTOM'
   everyNDays: number | null
   daysOfWeek: number[]

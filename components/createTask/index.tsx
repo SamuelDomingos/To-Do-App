@@ -21,7 +21,7 @@ import {
   ItemTitle,
 } from "@/components/ui/item"
 import DialogCreateRecurringTask from "./dialog-create-recurring-task"
-import DialogCreateSimpleTask from "./dialog-create-simple-task"
+import DialogFormSimpleTask from "./dialog-form-simple-task"
 
 const CreateTask = () => {
   const [openSimpleDialog, setOpenSimpleDialog] = useState(false)
@@ -102,10 +102,13 @@ const CreateTask = () => {
         </DrawerContent>
       </Drawer>
 
-      <DialogCreateSimpleTask
-        open={openSimpleDialog}
-        onOpenChange={setOpenSimpleDialog}
-      />
+      {openSimpleDialog && (
+        <DialogFormSimpleTask
+          open={openSimpleDialog}
+          onOpenChange={setOpenSimpleDialog}
+          mode="create"
+        />
+      )}
 
       <DialogCreateRecurringTask
         open={openRecurringDialog}

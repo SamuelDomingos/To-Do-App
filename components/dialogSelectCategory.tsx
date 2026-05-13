@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button"
 
 import { Item, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item"
 
-import { Check, icons } from "lucide-react"
+import { icons } from "lucide-react"
 
 import { Category } from "@/generated/prisma/client"
 
@@ -21,7 +21,6 @@ const DialogSelectCategory = ({
   open,
   onOpenChange,
   categories,
-  selectedCategoryId,
   onSelect,
 }: {
   open: boolean
@@ -74,10 +73,6 @@ const DialogSelectCategory = ({
                   <ItemContent>
                     <ItemTitle>{category.name}</ItemTitle>
                   </ItemContent>
-
-                  {selectedCategoryId === category.id && (
-                    <Check className="h-4 w-4 text-primary" />
-                  )}
                 </Item>
               </Button>
             )

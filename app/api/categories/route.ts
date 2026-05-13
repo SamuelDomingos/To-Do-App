@@ -1,8 +1,7 @@
 import { getAuthenticatedUser } from "@/lib/auth-middleware"
-import prisma from "@/lib/prisma"
-import { createCategorySchema } from "@/lib/validations/category"
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
+import { CategoryService } from "./services/index.services"
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,12 +13,7 @@ export async function GET(request: NextRequest) {
 
     const userId = token.sub as string
 
-    const categories = await prisma.category.findMany({
-      where: {
-        OR: [{ isGlobal: true }, { userId: userId }],
-      },
-      orderBy: { createdAt: "desc" },
-    })
+    const categories = await CategoryService.getCategories(userId)
 
     return NextResponse.json(categories)
   } catch (error) {
@@ -40,20 +34,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    const userId = token.sub as string
 
-    const validatedData = createCategorySchema.parse(body)
-    const category = await prisma.category.create({
-      data: {
-        ...validatedData,
-        userId: token.id,
-      },
-    })
+    const category = await CategoryService.createCategory(userId, body)
 
     return NextResponse.json(category, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Dados inválidos", details: error.errors },
+        { error: "Dados inválidos", details: error },
         { status: 400 }
       )
     }

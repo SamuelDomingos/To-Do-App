@@ -106,7 +106,7 @@ export const updateTaskSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   note: z.string().max(2000).optional().nullable(),
   status: z.nativeEnum(TaskStatus).optional(),
-  categoryId: z.string().cuid().optional(),
+  categoryId: z.string().uuid().optional(),
   recurrence: recurrenceSchema.optional().nullable(),
   items: z.array(taskItemSchema).optional(),
 })

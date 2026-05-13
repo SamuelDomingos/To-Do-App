@@ -4,7 +4,7 @@ import { useFieldArray, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { AnswerType, TaskType } from "@/generated/prisma/enums"
 import { CreateTaskDTO, createTaskSchema } from "@/lib/validations/task"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { createTask, updateTask } from "@/lib/api/tasks"
@@ -26,14 +26,14 @@ export const useTaskForm = ({
   const form = useForm<CreateTaskDTO>({
     resolver: zodResolver(createTaskSchema),
     defaultValues: {
-      title: initialData?.title || "",
-      note: initialData?.note || "",
-      type: initialData?.type || TaskType.SINGLE,
-      scheduledFor: initialData?.scheduledFor || "",
-      answerType: initialData?.answerType || AnswerType.YES_NO,
-      categoryId: initialData?.categoryId || "",
-      recurrence: initialData?.recurrence || null,
-      items: initialData?.items || [],
+      title: "",
+      note: "",
+      type: TaskType.SINGLE,
+      scheduledFor: "",
+      answerType: AnswerType.YES_NO,
+      categoryId: "",
+      recurrence: null,
+      items: [],
     },
   })
 
@@ -44,6 +44,40 @@ export const useTaskForm = ({
 
   const isRecurring = form.watch("type") === TaskType.RECURRING
   const isChecklist = form.watch("answerType") === AnswerType.CHECKLIST
+
+  useEffect(() => {
+    if (mode === "edit" && initialData) {
+      const dataToReset = {
+        title: initialData.title || "",
+        note: initialData.note || "",
+        type: initialData.type || TaskType.SINGLE,
+        scheduledFor: initialData.scheduledFor || "",
+        answerType: initialData.answerType || AnswerType.YES_NO,
+        categoryId: initialData.categoryId || "",
+        recurrence: initialData.recurrence || null,
+        items: initialData.items || [],
+      }
+      
+      form.reset(dataToReset)
+    } else if (mode === "create") {
+      form.reset({
+        title: "",
+        note: "",
+        type: TaskType.SINGLE,
+        scheduledFor: "",
+        answerType: AnswerType.YES_NO,
+        categoryId: "",
+        recurrence: null,
+        items: [],
+      })
+    }
+  }, [mode, form])
+  
+  useEffect(() => {
+    if (mode === "edit" && initialData?.categoryId) {
+      form.setValue("categoryId", initialData.categoryId)
+    }
+  }, [initialData?.categoryId, mode, form])
 
   const handleSubmit = form.handleSubmit(async (values) => {
     try {
