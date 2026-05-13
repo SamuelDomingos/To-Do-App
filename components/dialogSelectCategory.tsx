@@ -40,7 +40,7 @@ const DialogSelectCategory = ({
           <DialogTitle>Selecione a categoria</DialogTitle>
         </DialogHeader>
 
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="mt-4 grid grid-cols-3">
           {categories.map((category) => {
             const Icon = icons[category.icon as keyof typeof icons]
 
@@ -51,31 +51,29 @@ const DialogSelectCategory = ({
                 key={category.id}
                 type="button"
                 variant="ghost"
-                className="h-auto w-full p-0"
+                className="h-auto p-0"
                 onClick={() => {
                   onSelect(category.id)
                   onOpenChange(false)
                 }}
               >
                 <Item
-                  variant="outline"
-                  className="w-full justify-between rounded-xl p-3"
+                  variant={undefined}
+                  className="flex flex-col items-center justify-center gap-3 text-center"
                 >
-                  <div className="flex items-center gap-3">
-                    <ItemMedia
-                      variant="icon"
-                      className="rounded-xl"
-                      style={{
-                        backgroundColor: category.color,
-                      }}
-                    >
-                      <Icon className="h-5 w-5 text-black" />
-                    </ItemMedia>
+                  <ItemMedia
+                    variant="icon"
+                    className="rounded-lg p-2"
+                    style={{
+                      backgroundColor: category.color,
+                    }}
+                  >
+                    <Icon className="h-5 w-5 text-black" />
+                  </ItemMedia>
 
-                    <ItemContent>
-                      <ItemTitle>{category.name}</ItemTitle>
-                    </ItemContent>
-                  </div>
+                  <ItemContent>
+                    <ItemTitle>{category.name}</ItemTitle>
+                  </ItemContent>
 
                   {selectedCategoryId === category.id && (
                     <Check className="h-4 w-4 text-primary" />
@@ -90,6 +88,7 @@ const DialogSelectCategory = ({
           <DialogClose asChild>
             <Button variant="outline">Fechar</Button>
           </DialogClose>
+          <Button>Gerenciar Categorias</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -107,6 +107,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
     }
 
+    const userId = token.sub as string
     const body = await request.json()
 
     const validatedData = createTaskSchema.parse(body)
@@ -118,6 +119,10 @@ export async function POST(request: NextRequest) {
         type: validatedData.type,
         answerType: validatedData.answerType,
         categoryId: validatedData.categoryId,
+        scheduledFor: validatedData.scheduledFor
+          ? new Date(validatedData.scheduledFor)
+          : new Date(), // ← ADICIONE
+        userId: userId,
 
         ...(validatedData.recurrence && {
           recurrence: {
@@ -148,7 +153,7 @@ export async function POST(request: NextRequest) {
               create: validatedData.items.map((item) => ({
                 title: item.title,
                 order: item.order,
-                completed: item.completed,
+                completed: item.completed || false,
               })),
             },
           }),
@@ -166,12 +171,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Dados inválidos", details: error.errors },
+        { error: "Dados inválidos", details: error.format() },
         { status: 400 }
       )
     }
 
-    console.error("Error creating task:", error)
     return NextResponse.json({ error: "Erro ao criar tarefa" }, { status: 500 })
   }
 }

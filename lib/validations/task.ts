@@ -76,7 +76,7 @@ export const createTaskSchema = z
     note: z.string().max(2000).optional().nullable(),
     type: z.nativeEnum(TaskType).default("SINGLE"),
     answerType: z.nativeEnum(AnswerType).default("YES_NO"),
-    categoryId: z.string().cuid("ID de categoria inválido"),
+    categoryId: z.string().uuid("ID de categoria inválido"),
     scheduledFor: z.string().datetime().optional().nullable(),
 
     recurrence: recurrenceSchema.optional().nullable(),

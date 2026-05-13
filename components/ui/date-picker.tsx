@@ -47,7 +47,13 @@ const TaskDatePicker = ({ value, onChange }: TaskDatePickerProps) => {
       </PopoverTrigger>
 
       <PopoverContent className="w-auto p-0">
-        <Calendar mode="single" selected={value} onSelect={onChange} />
+        <Calendar
+          mode="single"
+          selected={value}
+          onSelect={onChange}
+          className="rounded-md border"
+          captionLayout="dropdown"
+        />
       </PopoverContent>
     </Popover>
   )

@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button"
 
 import TaskDatePicker from "@/components/ui/date-picker"
 
-import DialogSelectCategory from "../dialogSelectCategory"
+import DialogSelectCategory from "@/components/dialogSelectCategory"
 
 import useDialogHook from "../../_hooks/useDialogHook"
 
