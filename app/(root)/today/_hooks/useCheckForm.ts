@@ -1,65 +1,86 @@
 "use client"
 
-import { useTransition } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-
-import { toast } from "sonner"
-import { CompleteTaskDTO, completeTaskSchema } from "@/lib/validations/task"
 import { completeTask, uncompleteTask } from "@/lib/api/tasks"
+import { useTransition, useState } from "react"
+import { toast } from "sonner"
 
 const useCheckForm = ({
   taskId,
   initialCompleted = false,
   initialItems = {},
+  totalItems = 0,
 }: {
   taskId: string
   initialCompleted?: boolean
   initialItems?: Record<string, boolean>
+  totalItems?: number
 }) => {
   const [isPending, startTransition] = useTransition()
 
-  const form = useForm<CompleteTaskDTO>({
-    resolver: zodResolver(completeTaskSchema),
-    defaultValues: {
-      answer: initialCompleted,
-      itemsSnapshot: initialItems,
-      note: "",
-    },
-  })
+  const [completed, setCompleted] = useState(initialCompleted)
+  const [itemsSnapshot, setItemsSnapshot] =
+    useState<Record<string, boolean>>(initialItems)
 
-  const toggleTask = () => {
+  const toggleTask = async () => {
     startTransition(async () => {
       try {
-        const values = form.getValues()
-
-        if (values.answer) {
-          await uncompleteTask(taskId)
-          form.setValue("answer", false)
-
+        if (completed) {
+          uncompleteTask(taskId)
+          setCompleted(false)
+          setItemsSnapshot({})
           toast.success("Tarefa desmarcada")
-          return
+        } else {
+          completeTask(taskId, {
+            answer: true,
+            itemsSnapshot,
+          })
+          setCompleted(true)
+          toast.success("Tarefa concluída")
         }
-
-        await completeTask(taskId, values)
-        form.setValue("answer", true)
-
-        toast.success("Tarefa concluída")
-      } catch (err) {
-        console.error(err)
+      } catch {
         toast.error("Erro ao atualizar tarefa")
       }
     })
   }
 
-  const toggleItem = (itemId: string) => {
-    const current = form.getValues(`itemsSnapshot.${itemId}`)
-    form.setValue(`itemsSnapshot.${itemId}`, !current)
+  const toggleItem = async (itemId: string) => {
+    const nextSnapshot = {
+      ...itemsSnapshot,
+      [itemId]: !itemsSnapshot[itemId],
+    }
+
+    const completedCount = Object.values(nextSnapshot).filter(Boolean).length
+
+    const allDone = totalItems > 0 && completedCount === totalItems
+
+    setItemsSnapshot(nextSnapshot)
+
+    if (allDone) setCompleted(true)
+    if (completed && !allDone) setCompleted(false)
+
+    startTransition(async () => {
+      try {
+        await completeTask(taskId, {
+          answer: true,
+          itemsSnapshot: nextSnapshot,
+        })
+
+        if (allDone) {
+          toast.success("Checklist concluído!")
+        }
+      } catch {
+        setItemsSnapshot(initialItems)
+        setCompleted(initialCompleted)
+
+        toast.error("Erro ao atualizar item")
+      }
+    })
   }
 
   return {
-    form,
     isPending,
+    completed,
+    itemsSnapshot,
     toggleTask,
     toggleItem,
   }

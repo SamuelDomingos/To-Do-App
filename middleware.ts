@@ -2,13 +2,16 @@ import { NextResponse, NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
 
 const PUBLIC_ROUTES = ["/auth", "/api/auth"]
-
 const PROTECTED_ROUTES = ["/tasks", "/today", "/categories"]
-
 const AUTH_ROUTE = "/auth"
+const DEFAULT_ROUTE = "/today"
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
+
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.next()
+  }
 
   const token = await getToken({
     req,
@@ -16,6 +19,11 @@ export async function middleware(req: NextRequest) {
   })
 
   const isLoggedIn = !!token
+
+  // Redireciona raiz para /today
+  if (pathname === "/") {
+    return NextResponse.redirect(new URL(DEFAULT_ROUTE, req.url))
+  }
 
   if (isLoggedIn && pathname.startsWith(AUTH_ROUTE)) {
     return NextResponse.redirect(new URL("/tasks", req.url))
@@ -38,5 +46,8 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: "/((?!_next/static|_next/image|favicon.ico).*)",
+  matcher: [
+    // ✅ Exclui API routes e arquivos estáticos
+    "/((?!_next/static|_next/image|favicon.ico|api/).*)",
+  ],
 }

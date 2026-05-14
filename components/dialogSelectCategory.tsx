@@ -57,7 +57,9 @@ const DialogSelectCategory = ({
                   className="h-auto p-0"
                   onClick={() => {
                     onSelect(category.id)
-                    onOpenChange(false)
+                    requestAnimationFrame(() => {
+                      onOpenChange(false)
+                    })
                   }}
                 >
                   <Item

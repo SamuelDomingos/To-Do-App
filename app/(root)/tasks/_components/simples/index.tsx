@@ -17,7 +17,7 @@ import { SimpleTask } from "@/lib/api/types/tasks.types"
 import * as Icons from "lucide-react"
 import { LucideIcon } from "lucide-react"
 
-import DialogFormSimpleTask from "@/components/createTask/dialog-form-simple-task"
+import DialogFormSimpleTask from "@/components/createTask/dialog-form-task"
 import { formattedDate, parseLocalDate } from "@/lib/utils"
 
 const SimpleTasks = ({ simpleTasks }: { simpleTasks: SimpleTask[] }) => {
@@ -95,6 +95,7 @@ const SimpleTasks = ({ simpleTasks }: { simpleTasks: SimpleTask[] }) => {
       {selectedTask && (
         <DialogFormSimpleTask
           open={!!selectedTask}
+          type="simple"
           onOpenChange={() => {
             setSelectedTask(null)
           }}

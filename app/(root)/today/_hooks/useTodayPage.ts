@@ -1,9 +1,17 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { Filters, Task } from "../_interfaces/index.interfaces"
 import { updateTodayFilters } from "../_actions/todayActions"
-import { useRouter } from "next/navigation"
+
+interface UseTodayPageOptions {
+  initialTasks: Task[]
+  initialSelectedDate: number
+  currentMonth: number
+  currentYear: number
+  initialFilters: Filters
+}
 
 const useTodayPage = ({
   initialSelectedDate,
@@ -11,31 +19,19 @@ const useTodayPage = ({
   initialFilters,
   currentYear,
   currentMonth,
-}: {
-  initialTasks: Task[]
-  initialSelectedDate: number
-  currentMonth: number
-  currentYear: number
-  initialFilters: Filters
-}) => {
+}: UseTodayPageOptions) => {
   const router = useRouter()
-
-  const currentTasks = initialTasks
-  const selectedDate = initialSelectedDate
-
-  const [completedTasks, setCompletedTasks] = useState<Record<string, boolean>>(
-    {}
-  )
-
-  const [completedItems, setCompletedItems] = useState<Record<string, boolean>>(
-    {}
-  )
 
   const today = new Date()
 
+  const isDateAllowed = (date: number) => {
+    const selected = new Date(currentYear, currentMonth, date)
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    return selected <= todayMidnight
+  }
+
   const getFormattedSelectedDate = (date: number) => {
     const d = new Date(currentYear, currentMonth, date)
-
     return d.toLocaleDateString("pt-BR", {
       weekday: "long",
       month: "short",
@@ -43,38 +39,17 @@ const useTodayPage = ({
     })
   }
 
-  const isDateAllowed = (date: number) => {
-    const selectedDateObj = new Date(currentYear, currentMonth, date)
-
-    const todayObj = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate()
-    )
-
-    return selectedDateObj <= todayObj
-  }
-
   const handleSelectDate = useCallback(
     async (date: number) => {
-      const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(
-        2,
-        "0"
-      )}-${String(date).padStart(2, "0")}`
+      const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(date).padStart(2, "0")}`
 
-      const newFilters: Filters = {
-        ...initialFilters,
-        date: formattedDate,
-      }
+      const newFilters: Filters = { ...initialFilters, date: formattedDate }
 
       await updateTodayFilters(newFilters)
 
       const params = new URLSearchParams()
-
       Object.entries(newFilters).forEach(([key, value]) => {
-        if (value) {
-          params.set(key, value)
-        }
+        if (value) params.set(key, value)
       })
 
       router.push(`/today?${params.toString()}`)
@@ -82,18 +57,12 @@ const useTodayPage = ({
     [currentMonth, currentYear, initialFilters, router]
   )
 
-  const isDateDisabled = !isDateAllowed(selectedDate)
-
   return {
-    selectedDate,
-    completedTasks,
-    setCompletedTasks,
-    completedItems,
-    setCompletedItems,
+    selectedDate: initialSelectedDate,
+    currentTasks: initialTasks,
     getFormattedSelectedDate,
-    currentTasks,
     handleSelectDate,
-    isDateDisabled,
+    isDateDisabled: !isDateAllowed(initialSelectedDate),
   }
 }
 

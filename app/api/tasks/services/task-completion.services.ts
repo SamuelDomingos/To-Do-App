@@ -11,60 +11,57 @@ export class TaskCompletionService {
       include: { items: true },
     })
 
-    if (!task) {
-      throw new Error("Tarefa não encontrada")
-    }
+    if (!task) throw new Error("Tarefa não encontrada")
 
-    const completion = await prisma.taskCompletion.create({
-      data: {
-        taskId,
-        answer: validatedData.answer,
-        itemsSnapshot: validatedData.itemsSnapshot
-          ? JSON.parse(JSON.stringify(validatedData.itemsSnapshot))
-          : null,
-        note: validatedData.note,
-      },
+    const normalizedSnapshot = validatedData.itemsSnapshot
+      ? JSON.parse(JSON.stringify(validatedData.itemsSnapshot))
+      : null
+
+    const lastCompletion = await prisma.taskCompletion.findFirst({
+      where: { taskId },
+      orderBy: { completedAt: "desc" },
     })
 
-    let updatedTask = task
+    let completion
 
-    if (task.type === "SINGLE") {
-      updatedTask = await prisma.task.update({
-        where: { id: taskId },
-        data: { status: "COMPLETED" },
-        include: {
-          category: true,
-          recurrence: true,
-          items: true,
-          completions: {
-            orderBy: { completedAt: "desc" },
-            take: 1,
-          },
+    if (lastCompletion) {
+      completion = await prisma.taskCompletion.update({
+        where: { id: lastCompletion.id },
+        data: {
+          answer: validatedData.answer,
+          note: validatedData.note,
+          itemsSnapshot: normalizedSnapshot,
         },
       })
     } else {
-      updatedTask =
-        (await prisma.task.findUnique({
-          where: { id: taskId },
-          include: {
-            category: true,
-            recurrence: true,
-            items: true,
-            completions: {
-              orderBy: { completedAt: "desc" },
-              take: 1,
-            },
-          },
-        })) || task
+      completion = await prisma.taskCompletion.create({
+        data: {
+          taskId,
+          answer: validatedData.answer,
+          note: validatedData.note,
+          itemsSnapshot: normalizedSnapshot,
+        },
+      })
     }
+
+    const updatedTask = await prisma.task.update({
+      where: { id: taskId },
+      data: { status: "COMPLETED" },
+      include: {
+        category: true,
+        recurrence: true,
+        items: true,
+        completions: {
+          orderBy: { completedAt: "desc" },
+          take: 1,
+        },
+      },
+    })
 
     await revalidateTag(`tasks-${task.userId}`, "max")
     await revalidateTag(`task-${taskId}`, "max")
 
-    return {
-      task: updatedTask,
-      completion,
-    }
+    return { task: updatedTask, completion }
   }
 
   static async uncompleteTask(taskId: string) {
@@ -81,18 +78,12 @@ export class TaskCompletionService {
       where: { id: lastCompletion.id },
     })
 
-    const task = await prisma.task.findUnique({
+    const task = await prisma.task.update({
       where: { id: taskId },
+      data: { status: "PENDING" },
     })
 
-    if (task?.type === "SINGLE") {
-      await prisma.task.update({
-        where: { id: taskId },
-        data: { status: "PENDING" },
-      })
-    }
-
-    await revalidateTag(`tasks-${task?.userId}`, "max")
+    await revalidateTag(`tasks-${task.userId}`, "max")
     await revalidateTag(`task-${taskId}`, "max")
 
     return { success: true }

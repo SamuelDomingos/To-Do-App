@@ -13,6 +13,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 
 import { Plus, CheckCircle2, RotateCw } from "lucide-react"
+
 import {
   Item,
   ItemContent,
@@ -20,13 +21,24 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item"
-import DialogCreateRecurringTask from "./dialog-create-recurring-task"
-import DialogFormSimpleTask from "./dialog-form-simple-task"
+
+import DialogFormTask from "./dialog-form-task"
+
+type TaskFormType = "simple" | "recurring"
 
 const CreateTask = () => {
-  const [openSimpleDialog, setOpenSimpleDialog] = useState(false)
-  const [openRecurringDialog, setOpenRecurringDialog] = useState(false)
+  const [openDialogForm, setOpenDialogForm] = useState(false)
+  const [typeFormTask, setTypeFormTask] = useState<TaskFormType>("simple")
+
   const [openDrawer, setOpenDrawer] = useState(false)
+
+  const openForm = (type: TaskFormType) => {
+    setTypeFormTask(type)
+    setOpenDialogForm(true)
+    requestAnimationFrame(() => {
+      setOpenDrawer(false)
+    })
+  }
 
   return (
     <>
@@ -41,24 +53,19 @@ const CreateTask = () => {
         </DrawerTrigger>
 
         <DrawerContent>
-          <DrawerTitle></DrawerTitle>
+          <DrawerTitle />
+
           <div className="space-y-3 p-4">
             <button
-              onClick={() => {
-                setOpenSimpleDialog(true)
-                setOpenDrawer(false)
-              }}
+              onClick={() => openForm("simple")}
               className="w-full text-left"
             >
-              <Item
-                variant={undefined}
-                className="cursor-pointer transition-colors hover:bg-muted"
-              >
+              <Item className="cursor-pointer transition-colors hover:bg-muted">
                 <ItemMedia
                   variant="icon"
-                  className="rounded-full bg-primary p-2 dark:bg-primary"
+                  className="rounded-full bg-primary p-2"
                 >
-                  <CheckCircle2 className="h-5 w-5 text-primary-foreground dark:text-primary-foreground" />
+                  <CheckCircle2 className="h-5 w-5 text-primary-foreground" />
                 </ItemMedia>
 
                 <ItemContent>
@@ -73,21 +80,15 @@ const CreateTask = () => {
             <Separator />
 
             <button
-              onClick={() => {
-                setOpenRecurringDialog(true)
-                setOpenDrawer(false)
-              }}
+              onClick={() => openForm("recurring")}
               className="w-full text-left"
             >
-              <Item
-                variant={undefined}
-                className="cursor-pointer transition-colors hover:bg-muted"
-              >
+              <Item className="cursor-pointer transition-colors hover:bg-muted">
                 <ItemMedia
                   variant="icon"
-                  className="rounded-full bg-primary p-2 dark:bg-primary"
+                  className="rounded-full bg-primary p-2"
                 >
-                  <RotateCw className="h-5 w-5 text-primary-foreground dark:text-primary-foreground" />
+                  <RotateCw className="h-5 w-5 text-primary-foreground" />
                 </ItemMedia>
 
                 <ItemContent>
@@ -102,18 +103,14 @@ const CreateTask = () => {
         </DrawerContent>
       </Drawer>
 
-      {openSimpleDialog && (
-        <DialogFormSimpleTask
-          open={openSimpleDialog}
-          onOpenChange={setOpenSimpleDialog}
+      {openDialogForm && (
+        <DialogFormTask
+          open={openDialogForm}
+          onOpenChange={setOpenDialogForm}
           mode="create"
+          type={typeFormTask}
         />
       )}
-
-      <DialogCreateRecurringTask
-        open={openRecurringDialog}
-        onOpenChange={setOpenRecurringDialog}
-      />
     </>
   )
 }

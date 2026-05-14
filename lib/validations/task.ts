@@ -25,21 +25,9 @@ export const recurrenceSchema = z
     timesPerPeriod: z.number().int().positive().optional(),
     periodType: z.enum(PeriodType).optional(),
 
-    startDate: z.string(),
-  endDate: z.string().optional(),
+    startDate: z.string().min(1, "Data de início é obrigatória"),
+    endDate: z.string().optional(),
   })
-  .refine(
-    (data) => {
-      if (data.pattern === "DAILY" && !data.everyNDays) {
-        return false
-      }
-      return true
-    },
-    {
-      error: "everyNDays é obrigatório para recorrência diária",
-      path: ["everyNDays"],
-    }
-  )
   .refine(
     (data) => {
       if (
@@ -51,7 +39,7 @@ export const recurrenceSchema = z
       return true
     },
     {
-      error: "daysOfWeek é obrigatório para recorrência semanal",
+      message: "Selecione ao menos um dia da semana",
       path: ["daysOfWeek"],
     }
   )
@@ -66,7 +54,7 @@ export const recurrenceSchema = z
       return true
     },
     {
-      error: "daysOfMonth é obrigatório para recorrência mensal",
+      message: "Selecione ao menos um dia do mês",
       path: ["daysOfMonth"],
     }
   )
@@ -81,24 +69,20 @@ export const recurrenceSchema = z
       return true
     },
     {
-      error: "specificDates é obrigatório para recorrência anual",
+      message: "Selecione a data anual",
       path: ["specificDates"],
     }
   )
   .refine(
     (data) => {
-      if (
-        data.pattern === "CUSTOM" &&
-        (!data.timesPerPeriod || !data.periodType)
-      ) {
+      if (data.pattern === "CUSTOM" && !data.everyNDays) {
         return false
       }
       return true
     },
     {
-      error:
-        "timesPerPeriod e periodType são obrigatórios para recorrência personalizada",
-      path: ["timesPerPeriod"],
+      message: "Informe a quantidade de dias",
+      path: ["everyNDays"],
     }
   )
 
@@ -115,12 +99,24 @@ export const createTaskSchema = z
     type: z.enum(TaskType).default("SINGLE"),
     answerType: z.enum(AnswerType).default("YES_NO"),
     categoryId: z.uuid("ID de categoria inválido"),
-    scheduledFor: z.string(),
+    scheduledFor: z.string().min(0).default(""),
 
     recurrence: recurrenceSchema.optional().nullable(),
 
     items: z.array(taskItemSchema).optional(),
   })
+  .refine(
+    (data) => {
+      if (data.type === "SINGLE" && !data.scheduledFor) {
+        return false
+      }
+      return true
+    },
+    {
+      message: "Data é obrigatória para tarefas simples",
+      path: ["scheduledFor"],
+    }
+  )
   .refine(
     (data) => {
       if (data.type === "RECURRING" && !data.recurrence) {
@@ -129,7 +125,7 @@ export const createTaskSchema = z
       return true
     },
     {
-      error: "Dados de recorrência são obrigatórios para tarefas recorrentes",
+      message: "Dados de recorrência são obrigatórios para tarefas recorrentes",
       path: ["recurrence"],
     }
   )
@@ -144,7 +140,7 @@ export const createTaskSchema = z
       return true
     },
     {
-      error: "Itens são obrigatórios para tarefas de checklist",
+      message: "Itens são obrigatórios para tarefas de checklist",
       path: ["items"],
     }
   )
@@ -154,7 +150,7 @@ export const updateTaskSchema = z.object({
   note: z.string().max(2000).optional().nullable(),
   status: z.enum(TaskStatus).optional(),
   categoryId: z.uuid().optional(),
-  scheduledFor: z.string(),
+  scheduledFor: z.string().optional(),
   recurrence: recurrenceSchema.optional().nullable(),
   items: z.array(taskItemSchema).optional(),
 })
@@ -162,7 +158,7 @@ export const updateTaskSchema = z.object({
 export const completeTaskSchema = z.object({
   answer: z.boolean().optional(),
   itemsSnapshot: z.record(z.string(), z.boolean()).optional(),
-  note: z.string().max(500).optional()
+  note: z.string().max(500).optional(),
 })
 
 export type CreateTaskDTO = z.input<typeof createTaskSchema>

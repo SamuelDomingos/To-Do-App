@@ -22,10 +22,6 @@ const TodayIndex = ({
 }) => {
   const {
     selectedDate,
-    completedTasks,
-    setCompletedTasks,
-    completedItems,
-    setCompletedItems,
     getFormattedSelectedDate,
     currentTasks,
     handleSelectDate,
@@ -54,44 +50,21 @@ const TodayIndex = ({
       <div className="flex-1 space-y-2 overflow-y-auto">
         {currentTasks.length > 0 ? (
           currentTasks.map((task) => {
-            const isChecklist = task.type === "CHECKLIST"
-            const hasItems = isChecklist && task.items && task.items.length > 0
+            const isChecklist = task.items && task.items.length > 0
 
-            if (hasItems) {
+            if (isChecklist) {
               return (
                 <TaskChecklistItem
                   key={task.id}
                   task={task}
                   items={task.items}
-                  completedItems={completedItems}
                   disabled={isDateDisabled}
-                  onToggleItem={(itemId) => {
-                    if (!isDateDisabled) {
-                      setCompletedItems((prev) => ({
-                        ...prev,
-                        [itemId]: !prev[itemId],
-                      }))
-                    }
-                  }}
                 />
               )
             }
 
             return (
-              <TaskItem
-                key={task.id}
-                task={task}
-                completed={completedTasks[task.id] || false}
-                disabled={isDateDisabled}
-                onToggle={(taskId) => {
-                  if (!isDateDisabled) {
-                    setCompletedTasks((prev) => ({
-                      ...prev,
-                      [taskId]: !prev[taskId],
-                    }))
-                  }
-                }}
-              />
+              <TaskItem key={task.id} task={task} disabled={isDateDisabled} />
             )
           })
         ) : (
