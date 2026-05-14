@@ -3,6 +3,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -22,19 +23,33 @@ import {
 } from "@/components/ui/field"
 import * as Icons from "lucide-react"
 import { Separator } from "@/components/ui/separator"
+import { useState } from "react"
 
-export function CategoryDialog({
-  trigger,
-  category,
-}: {
-  trigger: any
+type CategoryDialogProps = {
+  trigger: React.ReactNode
   category?: {
     id: string
     name: string
     icon: string
     color: string
   }
-}) {
+  open?: boolean
+  setOpen?: (v: boolean) => void
+}
+
+export function CategoryDialog({
+  trigger,
+  category,
+  open: externalOpen,
+  setOpen: externalSetOpen,
+}: CategoryDialogProps) {
+  const isControlled = externalOpen !== undefined
+
+  const [internalOpen, setInternalOpen] = useState(false)
+
+  const open = isControlled ? externalOpen : internalOpen
+  const setOpen = isControlled ? externalSetOpen! : setInternalOpen
+
   const {
     form,
     isLoading,
@@ -43,32 +58,34 @@ export function CategoryDialog({
     setIsIconDialogOpen,
     isColorDialogOpen,
     setIsColorDialogOpen,
-    open,
-    setOpen,
   } = useCategory({
     mode: category ? "edit" : "create",
     category,
   })
 
+  const isEditMode = !!category
+
   const titleCategory = form.watch("name")
   const selectedIcon = form.watch("icon")
   const selectedColor = form.watch("color")
 
-  const { control } = form
-
   const IconComponent = (Icons as any)[selectedIcon] || Icons.Folder
-
-  const isEditMode = !!category
 
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>{trigger}</DialogTrigger>
+
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
               {isEditMode ? "Editar Categoria" : "Criar Nova Categoria"}
             </DialogTitle>
+            <DialogDescription>
+              {isEditMode
+                ? "Altere as informações da sua categoria personalizada"
+                : "Crie uma nova categoria para organizar suas tarefas"}
+            </DialogDescription>
           </DialogHeader>
 
           <Separator />
@@ -85,31 +102,27 @@ export function CategoryDialog({
             </div>
 
             <div
-              className="flex h-10 w-10 items-center justify-center rounded p-2"
+              className="flex h-10 w-10 items-center justify-center rounded"
               style={{ backgroundColor: selectedColor }}
             >
               <IconComponent className="h-8 w-8 text-white" />
             </div>
           </div>
-          
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <Controller
               name="name"
-              control={control}
+              control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor={field.name}>
-                    Nome da categoria
-                  </FieldLabel>
+                  <FieldLabel>Nome da categoria</FieldLabel>
                   <Input
                     {...field}
-                    id={field.name}
-                    aria-invalid={fieldState.invalid}
-                    placeholder="Ex: Trabalho, Estudos, Pessoal..."
+                    placeholder="Ex: Trabalho, Estudos..."
                     autoComplete="off"
                   />
                   <FieldDescription>
-                    Escolha um nome descritivo para sua categoria.
+                    Escolha um nome descritivo.
                   </FieldDescription>
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -132,12 +145,8 @@ export function CategoryDialog({
                 >
                   <IconComponent className="h-4 w-4" />
                 </div>
-
-                <p>Icone de categoria</p>
+                <p>Selecionar ícone</p>
               </Button>
-              <FieldDescription>
-                Clique para selecionar um ícone para sua categoria.
-              </FieldDescription>
             </Field>
 
             <Field>
@@ -149,14 +158,11 @@ export function CategoryDialog({
                 onClick={() => setIsColorDialogOpen(true)}
               >
                 <div
-                  className="h-6 w-6 rounded-full border-2 border-gray-300"
+                  className="h-6 w-6 rounded-full border"
                   style={{ backgroundColor: selectedColor }}
                 />
-                <p>Cor da categoria</p>
+                <p>Selecionar cor</p>
               </Button>
-              <FieldDescription>
-                Clique para escolher uma cor para sua categoria.
-              </FieldDescription>
             </Field>
 
             <DialogFooter className="gap-2 pt-4">
@@ -167,12 +173,13 @@ export function CategoryDialog({
               >
                 Cancelar
               </Button>
+
               <Button type="submit" disabled={isLoading}>
                 {isLoading
                   ? "Salvando..."
                   : isEditMode
-                    ? "Salvar Alterações"
-                    : "Criar Categoria"}
+                  ? "Salvar alterações"
+                  : "Criar categoria"}
               </Button>
             </DialogFooter>
           </form>

@@ -14,7 +14,6 @@ export const useCategory = ({
   mode,
   categoryId,
   onSuccess,
-
   category,
 }: {
   mode: "create" | "edit"
@@ -28,7 +27,6 @@ export const useCategory = ({
   }
 }) => {
   const router = useRouter()
-  const [open, setOpen] = useState(false)
   const [isIconDialogOpen, setIsIconDialogOpen] = useState(false)
   const [isColorDialogOpen, setIsColorDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -36,11 +34,28 @@ export const useCategory = ({
   const form = useForm<CreateCategoryDTO>({
     resolver: zodResolver(createCategorySchema),
     defaultValues: {
-      name: "",
-      icon: "Folder",
-      color: "#4F46E5",
+      name: category?.name || "",
+      icon: category?.icon || "Folder",
+      color: category?.color || "#4F46E5",
     },
   })
+
+  // Carrega os dados quando o categoria prop muda
+  useEffect(() => {
+    if (category && mode === "edit") {
+      form.reset({
+        name: category.name,
+        icon: category.icon,
+        color: category.color,
+      })
+    } else if (mode === "create") {
+      form.reset({
+        name: "",
+        icon: "Folder",
+        color: "#4F46E5",
+      })
+    }
+  }, [category, mode, form])
 
   const handleSubmit = form.handleSubmit(async (values) => {
     try {
@@ -62,12 +77,14 @@ export const useCategory = ({
 
         toast.success("Categoria criada com sucesso!")
       } else {
-        if (!categoryId) {
+        const idToUse = category?.id || categoryId
+
+        if (!idToUse) {
           toast.error("ID da categoria não encontrado")
           return
         }
 
-        response = await updateCategory(categoryId, {
+        response = await updateCategory(idToUse, {
           name: values.name,
           icon: values.icon,
           color: values.color,
@@ -82,7 +99,6 @@ export const useCategory = ({
       }
 
       form.reset()
-      setOpen(false)
       router.refresh()
       if (onSuccess) {
         onSuccess()
@@ -96,22 +112,6 @@ export const useCategory = ({
     }
   })
 
-  useEffect(() => {
-    if (open && category) {
-      form.reset({
-        name: category.name,
-        icon: category.icon,
-        color: category.color,
-      })
-    } else if (open && mode === "create") {
-      form.reset({
-        name: "",
-        icon: "Folder",
-        color: "#4F46E5",
-      })
-    }
-  }, [open, category, form, mode])
-
   return {
     form,
     isLoading,
@@ -120,7 +120,5 @@ export const useCategory = ({
     setIsIconDialogOpen,
     isColorDialogOpen,
     setIsColorDialogOpen,
-    open,
-    setOpen,
   }
 }

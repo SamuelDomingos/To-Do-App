@@ -2,11 +2,17 @@
 
 import { useFieldArray, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { AnswerType, TaskType } from "@/generated/prisma/enums"
-import { CreateTaskDTO, createTaskSchema } from "@/lib/validations/task"
-import { useState, useEffect } from "react"
+
+import { useState, useEffect, useMemo } from "react"
+
 import { useRouter } from "next/navigation"
+
 import { toast } from "sonner"
+
+import { AnswerType, TaskType } from "@/generated/prisma/enums"
+
+import { CreateTaskDTO, createTaskSchema } from "@/lib/validations/task"
+
 import { createTask, updateTask } from "@/lib/api/tasks"
 
 export const useTaskForm = ({
@@ -21,11 +27,11 @@ export const useTaskForm = ({
   onOpenChange?: (open: boolean) => void
 }) => {
   const [isLoading, setIsLoading] = useState(false)
+
   const router = useRouter()
 
-  const form = useForm<CreateTaskDTO>({
-    resolver: zodResolver(createTaskSchema),
-    defaultValues: {
+  const defaultValues = useMemo<CreateTaskDTO>(
+    () => ({
       title: "",
       note: "",
       type: TaskType.SINGLE,
@@ -34,7 +40,13 @@ export const useTaskForm = ({
       categoryId: "",
       recurrence: null,
       items: [],
-    },
+    }),
+    []
+  )
+
+  const form = useForm<CreateTaskDTO>({
+    resolver: zodResolver(createTaskSchema),
+    defaultValues,
   })
 
   const itemsFieldArray = useFieldArray({
@@ -43,11 +55,12 @@ export const useTaskForm = ({
   })
 
   const isRecurring = form.watch("type") === TaskType.RECURRING
+
   const isChecklist = form.watch("answerType") === AnswerType.CHECKLIST
 
   useEffect(() => {
     if (mode === "edit" && initialData) {
-      const dataToReset = {
+      form.reset({
         title: initialData.title || "",
         note: initialData.note || "",
         type: initialData.type || TaskType.SINGLE,
@@ -56,28 +69,13 @@ export const useTaskForm = ({
         categoryId: initialData.categoryId || "",
         recurrence: initialData.recurrence || null,
         items: initialData.items || [],
-      }
-      
-      form.reset(dataToReset)
-    } else if (mode === "create") {
-      form.reset({
-        title: "",
-        note: "",
-        type: TaskType.SINGLE,
-        scheduledFor: "",
-        answerType: AnswerType.YES_NO,
-        categoryId: "",
-        recurrence: null,
-        items: [],
       })
     }
-  }, [mode, form])
-  
-  useEffect(() => {
-    if (mode === "edit" && initialData?.categoryId) {
-      form.setValue("categoryId", initialData.categoryId)
+
+    if (mode === "create") {
+      form.reset(defaultValues)
     }
-  }, [initialData?.categoryId, mode, form])
+  }, [mode, initialData])
 
   const handleSubmit = form.handleSubmit(async (values) => {
     try {
@@ -92,8 +90,11 @@ export const useTaskForm = ({
         }
 
         toast.success("Tarefa criada com sucesso!")
-        form.reset()
+
+        form.reset(defaultValues)
+
         onOpenChange?.(false)
+
         router.refresh()
       }
 
@@ -106,12 +107,14 @@ export const useTaskForm = ({
         }
 
         toast.success("Tarefa atualizada com sucesso!")
-        form.reset(values)
+
         onOpenChange?.(false)
+
         router.refresh()
       }
     } catch (error) {
       console.error(error)
+
       toast.error("Erro ao processar tarefa")
     } finally {
       setIsLoading(false)

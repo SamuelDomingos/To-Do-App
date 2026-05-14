@@ -10,14 +10,20 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formattedDate(
-  date: Date
-) {
-  return format(
-    date,
-    "EEEE, d 'de' MMMM",
-    {
-      locale: ptBR,
-    }
-  )
+export function formattedDate(dateString: string) {
+  const date = new Date(dateString + 'T12:00:00')
+  
+  return format(date, "EEEE, d 'de' MMMM", {
+    locale: ptBR,
+  })
+}
+
+export const parseLocalDate = (dateString: string) => {
+  const normalized = dateString.split("T")[0]
+
+  const [year, month, day] = normalized
+    .split("-")
+    .map(Number)
+
+  return new Date(year, month - 1, day)
 }

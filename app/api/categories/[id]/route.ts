@@ -4,7 +4,7 @@ import { CategoryService } from "../services/index.services"
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = await getAuthenticatedUser(request)
@@ -13,9 +13,11 @@ export async function GET(
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
     }
 
+    const { id } = await params
+
     const category = await CategoryService.getCategoryById(
       token.sub as string,
-      params.id
+      id
     )
 
     if (!category) {
@@ -36,7 +38,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = await getAuthenticatedUser(request)
@@ -45,15 +47,31 @@ export async function PUT(
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
     }
 
+    const { id } = await params
     const body = await request.json()
+
     const category = await CategoryService.updateCategory(
       token.sub as string,
-      params.id,
+      id,
       body
     )
 
     return NextResponse.json(category)
   } catch (error: any) {
+    if (error.message?.includes("não encontrada")) {
+      return NextResponse.json(
+        { error: error.message || "Categoria não encontrada" },
+        { status: 404 }
+      )
+    }
+
+    if (error.message?.includes("globais")) {
+      return NextResponse.json(
+        { error: error.message || "Não é possível editar categorias globais" },
+        { status: 403 }
+      )
+    }
+
     return NextResponse.json(
       { error: error.message || "Erro ao atualizar categoria" },
       { status: 400 }
@@ -63,7 +81,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = await getAuthenticatedUser(request)
@@ -72,10 +90,26 @@ export async function DELETE(
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
     }
 
-    await CategoryService.deleteCategory(token.sub as string, params.id)
+    const { id } = await params
+
+    await CategoryService.deleteCategory(token.sub as string, id)
 
     return NextResponse.json({ success: true })
   } catch (error: any) {
+    if (error.message?.includes("não encontrada")) {
+      return NextResponse.json(
+        { error: error.message || "Categoria não encontrada" },
+        { status: 404 }
+      )
+    }
+
+    if (error.message?.includes("globais")) {
+      return NextResponse.json(
+        { error: error.message || "Não é possível deletar categorias globais" },
+        { status: 403 }
+      )
+    }
+
     return NextResponse.json(
       { error: error.message || "Erro ao deletar categoria" },
       { status: 400 }

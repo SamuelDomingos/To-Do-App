@@ -1,11 +1,9 @@
 import { NextResponse, NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
 
-const PUBLIC_ROUTES = [
-  "/tasks",
-  "/today",
-  "/api/auth",
-]
+const PUBLIC_ROUTES = ["/auth", "/api/auth"]
+
+const PROTECTED_ROUTES = ["/tasks", "/today", "/categories"]
 
 const AUTH_ROUTE = "/auth"
 
@@ -23,20 +21,17 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/tasks", req.url))
   }
 
-  if (
-    PUBLIC_ROUTES.some(
-      (route) =>
-        pathname === route || pathname.startsWith(`${route}/`)
-    )
-  ) {
+  if (PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
     return NextResponse.next()
   }
 
-  // 🔥 3. Protege rotas privadas
-  if (!isLoggedIn) {
-    const loginUrl = new URL("/auth", req.url)
-    loginUrl.searchParams.set("callbackUrl", pathname)
-    return NextResponse.redirect(loginUrl)
+  if (PROTECTED_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
+    if (!isLoggedIn) {
+      const loginUrl = new URL("/auth", req.url)
+      loginUrl.searchParams.set("callbackUrl", pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+    return NextResponse.next()
   }
 
   return NextResponse.next()

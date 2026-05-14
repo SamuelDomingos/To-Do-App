@@ -14,19 +14,26 @@ import {
 
 import { SimpleTask } from "@/lib/api/types/tasks.types"
 
-import { formattedDate } from "@/lib/utils"
-
 import * as Icons from "lucide-react"
 import { LucideIcon } from "lucide-react"
 
 import DialogFormSimpleTask from "@/components/createTask/dialog-form-simple-task"
+import { formattedDate, parseLocalDate } from "@/lib/utils"
 
 const SimpleTasks = ({ simpleTasks }: { simpleTasks: SimpleTask[] }) => {
   const [selectedTask, setSelectedTask] = useState<SimpleTask | null>(null)
 
   const groupedTasks = simpleTasks.reduce(
     (acc: Record<string, SimpleTask[]>, task) => {
-      const groupKey = format(new Date(task.scheduledFor), "yyyy-MM-dd")
+      let groupKey: string
+
+      if (task.scheduledFor) {
+        const date = parseLocalDate(task.scheduledFor)
+
+        groupKey = format(date, "yyyy-MM-dd")
+      } else {
+        groupKey = format(new Date(), "yyyy-MM-dd")
+      }
 
       if (!acc[groupKey]) {
         acc[groupKey] = []
@@ -45,9 +52,7 @@ const SimpleTasks = ({ simpleTasks }: { simpleTasks: SimpleTask[] }) => {
         {Object.entries(groupedTasks).map(([date, tasks]) => (
           <div key={date} className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">
-                {formattedDate(new Date(date))}
-              </h2>
+              <h2 className="text-lg font-semibold">{formattedDate(date)}</h2>
             </div>
 
             <div className="space-y-3 px-4">
@@ -101,9 +106,7 @@ const SimpleTasks = ({ simpleTasks }: { simpleTasks: SimpleTask[] }) => {
                   title: selectedTask.title,
                   note: selectedTask.note || "",
                   categoryId: selectedTask.category.id,
-                  scheduledFor: selectedTask.scheduledFor
-                    ? new Date(selectedTask.scheduledFor).toISOString()
-                    : "",
+                  scheduledFor: selectedTask.scheduledFor || "",
                   items: selectedTask.items || [],
                 }
               : undefined

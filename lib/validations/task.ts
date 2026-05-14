@@ -9,7 +9,7 @@ import { z } from "zod"
 
 export const recurrenceSchema = z
   .object({
-    pattern: z.nativeEnum(RecurrencePattern),
+    pattern: z.enum(RecurrencePattern),
 
     everyNDays: z.number().int().positive().optional(),
 
@@ -19,38 +19,74 @@ export const recurrenceSchema = z
     daysOfMonth: z.array(z.number().int().min(1).max(31)).optional(),
     everyNMonths: z.number().int().positive().optional(),
 
-    specificDates: z.array(z.string().regex(/^\d{2}-\d{2}$/)).optional(), // MM-DD
+    specificDates: z.array(z.string().regex(/^\d{2}-\d{2}$/)).optional(),
     everyNYears: z.number().int().positive().optional(),
 
     timesPerPeriod: z.number().int().positive().optional(),
-    periodType: z.nativeEnum(PeriodType).optional(),
+    periodType: z.enum(PeriodType).optional(),
 
-    startDate: z.string().datetime().optional(),
-    endDate: z.string().datetime().optional().nullable(),
+    startDate: z.string(),
+  endDate: z.string().optional(),
   })
   .refine(
     (data) => {
       if (data.pattern === "DAILY" && !data.everyNDays) {
         return false
       }
+      return true
+    },
+    {
+      error: "everyNDays é obrigatório para recorrência diária",
+      path: ["everyNDays"],
+    }
+  )
+  .refine(
+    (data) => {
       if (
         data.pattern === "WEEKLY" &&
         (!data.daysOfWeek || data.daysOfWeek.length === 0)
       ) {
         return false
       }
+      return true
+    },
+    {
+      error: "daysOfWeek é obrigatório para recorrência semanal",
+      path: ["daysOfWeek"],
+    }
+  )
+  .refine(
+    (data) => {
       if (
         data.pattern === "MONTHLY" &&
         (!data.daysOfMonth || data.daysOfMonth.length === 0)
       ) {
         return false
       }
+      return true
+    },
+    {
+      error: "daysOfMonth é obrigatório para recorrência mensal",
+      path: ["daysOfMonth"],
+    }
+  )
+  .refine(
+    (data) => {
       if (
         data.pattern === "YEARLY" &&
         (!data.specificDates || data.specificDates.length === 0)
       ) {
         return false
       }
+      return true
+    },
+    {
+      error: "specificDates é obrigatório para recorrência anual",
+      path: ["specificDates"],
+    }
+  )
+  .refine(
+    (data) => {
       if (
         data.pattern === "CUSTOM" &&
         (!data.timesPerPeriod || !data.periodType)
@@ -60,7 +96,9 @@ export const recurrenceSchema = z
       return true
     },
     {
-      message: "Dados de recorrência incompletos para o padrão selecionado",
+      error:
+        "timesPerPeriod e periodType são obrigatórios para recorrência personalizada",
+      path: ["timesPerPeriod"],
     }
   )
 
@@ -74,10 +112,10 @@ export const createTaskSchema = z
   .object({
     title: z.string().min(1, "Título é obrigatório").max(200),
     note: z.string().max(2000).optional().nullable(),
-    type: z.nativeEnum(TaskType).default("SINGLE"),
-    answerType: z.nativeEnum(AnswerType).default("YES_NO"),
-    categoryId: z.string().uuid("ID de categoria inválido"),
-    scheduledFor: z.string().datetime().optional().nullable(),
+    type: z.enum(TaskType).default("SINGLE"),
+    answerType: z.enum(AnswerType).default("YES_NO"),
+    categoryId: z.uuid("ID de categoria inválido"),
+    scheduledFor: z.string(),
 
     recurrence: recurrenceSchema.optional().nullable(),
 
@@ -88,6 +126,15 @@ export const createTaskSchema = z
       if (data.type === "RECURRING" && !data.recurrence) {
         return false
       }
+      return true
+    },
+    {
+      error: "Dados de recorrência são obrigatórios para tarefas recorrentes",
+      path: ["recurrence"],
+    }
+  )
+  .refine(
+    (data) => {
       if (
         data.answerType === "CHECKLIST" &&
         (!data.items || data.items.length === 0)
@@ -97,24 +144,25 @@ export const createTaskSchema = z
       return true
     },
     {
-      message:
-        "Dados incompletos: tarefas recorrentes precisam de padrão de recorrência, tarefas de checklist precisam de itens",
+      error: "Itens são obrigatórios para tarefas de checklist",
+      path: ["items"],
     }
   )
 
 export const updateTaskSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   note: z.string().max(2000).optional().nullable(),
-  status: z.nativeEnum(TaskStatus).optional(),
-  categoryId: z.string().uuid().optional(),
+  status: z.enum(TaskStatus).optional(),
+  categoryId: z.uuid().optional(),
+  scheduledFor: z.string(),
   recurrence: recurrenceSchema.optional().nullable(),
   items: z.array(taskItemSchema).optional(),
 })
 
 export const completeTaskSchema = z.object({
   answer: z.boolean().optional(),
-  itemsSnapshot: z.record(z.boolean()).optional(),
-  note: z.string().max(500).optional().nullable(),
+  itemsSnapshot: z.record(z.string(), z.boolean()).optional(),
+  note: z.string().max(500).optional()
 })
 
 export type CreateTaskDTO = z.input<typeof createTaskSchema>

@@ -24,6 +24,8 @@ import useGetCategory from "@/hooks/useGetCategory"
 import * as Icons from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { CreateTaskDTO } from "@/lib/validations/task"
+import { format } from "date-fns"
+import { parseLocalDate } from "@/lib/utils"
 
 export default function DialogFormSimpleTask({
   open,
@@ -47,7 +49,6 @@ export default function DialogFormSimpleTask({
     onOpenChange,
   })
 
-  
   const { categories } = useGetCategory()
 
   const selectedCategory = form.watch("categoryId")
@@ -75,7 +76,6 @@ export default function DialogFormSimpleTask({
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Campo Título */}
             <Controller
               name="title"
               control={form.control}
@@ -112,7 +112,7 @@ export default function DialogFormSimpleTask({
                       className="flex h-8 w-8 items-center justify-center rounded"
                       style={{ backgroundColor: selectedCategoryData.color }}
                     >
-                      <IconComponent className="h-5 w-5 text-white" />
+                      <IconComponent className="h-5 w-5" />
                     </div>
                     <span className="text-sm">{selectedCategoryData.name}</span>
                   </>
@@ -125,7 +125,6 @@ export default function DialogFormSimpleTask({
               </Button>
             </div>
 
-            {/* Campo Data */}
             <div className="space-y-2">
               <FieldLabel>Data</FieldLabel>
               <Controller
@@ -133,9 +132,13 @@ export default function DialogFormSimpleTask({
                 control={form.control}
                 render={({ field }) => (
                   <TaskDatePicker
-                    value={field.value ? new Date(field.value) : undefined}
+                    value={
+                      field.value
+                        ? parseLocalDate(field.value) || undefined
+                        : undefined
+                    }
                     onChange={(date) => {
-                      field.onChange(date?.toISOString() || "")
+                      field.onChange(date ? format(date, "yyyy-MM-dd") : "")
                     }}
                   />
                 )}

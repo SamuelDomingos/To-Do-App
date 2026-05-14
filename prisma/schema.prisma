@@ -49,7 +49,7 @@ model Task {
   type         TaskType   @default(SINGLE)
   answerType   AnswerType @default(YES_NO)
   status       TaskStatus @default(PENDING)
-  scheduledFor DateTime
+  scheduledFor String
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -110,8 +110,8 @@ model Recurrence {
   timesPerPeriod Int?
   periodType     PeriodType?
 
-  startDate DateTime  @default(now())
-  endDate   DateTime?
+  startDate String
+  endDate   String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

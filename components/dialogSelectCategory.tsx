@@ -16,6 +16,8 @@ import { Item, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { icons } from "lucide-react"
 
 import { Category } from "@/generated/prisma/client"
+import Link from "next/link"
+import { ScrollArea, ScrollBar } from "./ui/scroll-area"
 
 const DialogSelectCategory = ({
   open,
@@ -39,51 +41,56 @@ const DialogSelectCategory = ({
           <DialogTitle>Selecione a categoria</DialogTitle>
         </DialogHeader>
 
-        <div className="mt-4 grid grid-cols-3">
-          {categories.map((category) => {
-            const Icon = icons[category.icon as keyof typeof icons]
+        <ScrollArea className="h-100">
+          <ScrollBar />
+          <div className="mt-4 grid grid-cols-3">
+            {categories.map((category) => {
+              const Icon = icons[category.icon as keyof typeof icons]
 
-            if (!Icon) return null
+              if (!Icon) return null
 
-            return (
-              <Button
-                key={category.id}
-                type="button"
-                variant="ghost"
-                className="h-auto p-0"
-                onClick={() => {
-                  onSelect(category.id)
-                  onOpenChange(false)
-                }}
-              >
-                <Item
-                  variant={undefined}
-                  className="flex flex-col items-center justify-center gap-3 text-center"
+              return (
+                <Button
+                  key={category.id}
+                  type="button"
+                  variant="ghost"
+                  className="h-auto p-0"
+                  onClick={() => {
+                    onSelect(category.id)
+                    onOpenChange(false)
+                  }}
                 >
-                  <ItemMedia
-                    variant="icon"
-                    className="rounded-lg p-2"
-                    style={{
-                      backgroundColor: category.color,
-                    }}
+                  <Item
+                    variant={undefined}
+                    className="flex flex-col items-center justify-center gap-3 text-center"
                   >
-                    <Icon className="h-5 w-5 text-black" />
-                  </ItemMedia>
+                    <ItemMedia
+                      variant="icon"
+                      className="rounded-lg p-2"
+                      style={{
+                        backgroundColor: category.color,
+                      }}
+                    >
+                      <Icon className="h-5 w-5 text-black" />
+                    </ItemMedia>
 
-                  <ItemContent>
-                    <ItemTitle>{category.name}</ItemTitle>
-                  </ItemContent>
-                </Item>
-              </Button>
-            )
-          })}
-        </div>
+                    <ItemContent>
+                      <ItemTitle>{category.name}</ItemTitle>
+                    </ItemContent>
+                  </Item>
+                </Button>
+              )
+            })}
+          </div>
+        </ScrollArea>
 
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="outline">Fechar</Button>
           </DialogClose>
-          <Button>Gerenciar Categorias</Button>
+          <Button>
+            <Link href="/categories">Gerenciar Categorias</Link>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

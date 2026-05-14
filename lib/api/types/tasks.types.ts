@@ -14,29 +14,40 @@ export interface TaskItem {
 
 export interface Recurrence {
   id: string
-  category: Category
+
   pattern: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY' | 'CUSTOM'
+
   everyNDays: number | null
+
   daysOfWeek: number[]
+
   everyNWeeks: number | null
+
   daysOfMonth: number[]
+
   everyNMonths: number | null
+
   specificDates: string[]
+
   everyNYears: number | null
+
   timesPerPeriod: number | null
+
   periodType: 'WEEK' | 'MONTH' | 'YEAR' | null
-  startDate: Date
-  endDate: Date | null
+
+  startDate: string
+
+  endDate: string | null
 }
 
 export interface SimpleTask {
   id: string
   title: string
   note: string | null
-  status: 'PENDING' | 'COMPLETED' | 'ARCHIVED'
+  status: "PENDING" | "COMPLETED" | "ARCHIVED"
   category: Category
   items: TaskItem[]
-  scheduledFor: Date | null
+  scheduledFor: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -45,11 +56,11 @@ export interface RecurringTask {
   id: string
   title: string
   note: string | null
-  status: 'PENDING' | 'COMPLETED' | 'ARCHIVED'
+  status: "PENDING" | "COMPLETED" | "ARCHIVED"
   category: Category
   recurrence: Recurrence | null
   items: TaskItem[]
-  scheduledFor: Date | null
+  scheduledFor: string | null
   createdAt: Date
   updatedAt: Date
 }

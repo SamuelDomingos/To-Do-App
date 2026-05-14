@@ -1,11 +1,12 @@
 import { Clipboard } from "lucide-react"
 
-interface EmptyStateProps {
+export function EmptyState({
+  title,
+  description,
+}: {
   title: string
   description: string
-}
-
-export function EmptyState({ title, description }: EmptyStateProps) {
+}) {
   return (
     <div className="flex flex-col items-center justify-center py-12">
       <Clipboard className="mb-4 h-12 w-12 text-muted-foreground" />
