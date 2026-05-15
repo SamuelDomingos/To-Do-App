@@ -18,6 +18,7 @@ import { icons } from "lucide-react"
 import { Category } from "@/generated/prisma/client"
 import Link from "next/link"
 import { ScrollArea, ScrollBar } from "./ui/scroll-area"
+import { Separator } from "./ui/separator"
 
 const DialogSelectCategory = ({
   open,
@@ -40,6 +41,8 @@ const DialogSelectCategory = ({
         <DialogHeader>
           <DialogTitle>Selecione a categoria</DialogTitle>
         </DialogHeader>
+
+        <Separator/>
 
         <ScrollArea className="h-100">
           <ScrollBar />

@@ -39,6 +39,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../ui/alert-dialog"
+import { Separator } from "../ui/separator"
 
 export default function DialogFormTask({
   open,
@@ -101,6 +102,8 @@ export default function DialogFormTask({
                   : "Criar Tarefa Simples"}
             </DialogTitle>
           </DialogHeader>
+
+          <Separator/>
 
           <form onSubmit={handleSubmit}>
             <ScrollArea className="flex h-100 w-full flex-col">
@@ -295,7 +298,7 @@ export default function DialogFormTask({
                       <AlertDialogAction
                         onClick={() => handleDeleteTask(taskId)}
                         disabled={isDeleting}
-                        className="bg-destructive hover:bg-destructive/90"
+                        variant="destructive"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
                         {isDeleting ? "Deletando..." : "Deletar"}
