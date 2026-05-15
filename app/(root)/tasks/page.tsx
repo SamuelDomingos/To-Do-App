@@ -4,7 +4,7 @@ import RecurringTasks from "./_components/recurring"
 import Error from "@/components/error"
 import { Suspense } from "react"
 import { getLists } from "./_services/getLists"
-import { EmptyState } from "./_components/empty-state"
+import { EmptyState } from "../../../components/empty-state"
 
 const PageTasks = async () => {
   const result = await getLists()

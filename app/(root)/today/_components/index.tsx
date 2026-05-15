@@ -1,6 +1,6 @@
 "use client"
 
-import { EmptyState } from "../../tasks/_components/empty-state"
+import { EmptyState } from "../../../../components/empty-state"
 import useTodayPage from "../_hooks/useTodayPage"
 import { Filters, Task } from "../_interfaces/index.interfaces"
 import { CalendarDays } from "./calendarDays"

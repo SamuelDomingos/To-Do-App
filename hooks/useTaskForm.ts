@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { AnswerType, TaskType } from "@/generated/prisma/enums"
 import { CreateTaskDTO, createTaskSchema } from "@/lib/validations/task"
-import { createTask, updateTask } from "@/lib/api/tasks"
+import { createTask, deleteTask, updateTask } from "@/lib/api/tasks"
 
 export const useTaskForm = ({
   mode,
@@ -23,6 +23,8 @@ export const useTaskForm = ({
   onOpenChange?: (open: boolean) => void
 }) => {
   const [isLoading, setIsLoading] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [openCategoryDialog, setOpenCategoryDialog] = useState(false)
   const router = useRouter()
 
   const isRecurringForm = type === "recurring"
@@ -69,17 +71,23 @@ export const useTaskForm = ({
       form.reset({
         title: initialData.title || "",
         note: initialData.note || "",
-        type: initialData.type || (isRecurringForm ? TaskType.RECURRING : TaskType.SINGLE),
+        type:
+          initialData.type ||
+          (isRecurringForm ? TaskType.RECURRING : TaskType.SINGLE),
         scheduledFor: initialData.scheduledFor || "",
         answerType: initialData.answerType || AnswerType.YES_NO,
         categoryId: initialData.categoryId || "",
-        recurrence: initialData.recurrence || (isRecurringForm ? {
-          pattern: "DAILY",
-          startDate: "",
-          daysOfWeek: [],
-          daysOfMonth: [],
-          specificDates: [],
-        } : null),
+        recurrence:
+          initialData.recurrence ||
+          (isRecurringForm
+            ? {
+                pattern: "DAILY",
+                startDate: "",
+                daysOfWeek: [],
+                daysOfMonth: [],
+                specificDates: [],
+              }
+            : null),
         items: initialData.items || [],
       })
     }
@@ -138,12 +146,38 @@ export const useTaskForm = ({
     }
   )
 
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      setIsDeleting(true)
+
+      const response = await deleteTask(taskId)
+
+      if (!response) {
+        toast.error(response || "Erro ao deletar tarefa")
+        return
+      }
+
+      toast.success("Tarefa deletada com sucesso")
+
+      router.refresh()
+      onOpenChange?.(false)
+    } catch (error) {
+      console.error(error)
+
+      toast.error("Não foi possível deletar a tarefa")
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   return {
     form,
     handleSubmit,
+    handleDeleteTask,
+    setOpenCategoryDialog,
+    openCategoryDialog,
+    isDeleting,
     isLoading,
-    isRecurring,
-    isChecklist,
     itemsFieldArray,
   }
 }

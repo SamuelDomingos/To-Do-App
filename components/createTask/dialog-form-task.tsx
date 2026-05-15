@@ -28,6 +28,17 @@ import { format } from "date-fns"
 import { parseLocalDate } from "@/lib/utils"
 import { RecurrenceSection } from "./recurrenceSection"
 import { ScrollArea, ScrollBar } from "../ui/scroll-area"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../ui/alert-dialog"
 
 export default function DialogFormTask({
   open,
@@ -44,9 +55,16 @@ export default function DialogFormTask({
   taskId?: string
   initialData?: Partial<CreateTaskDTO>
 }) {
-  const [openCategoryDialog, setOpenCategoryDialog] = useState(false)
-  
-  const { form, handleSubmit, isLoading, itemsFieldArray } = useTaskForm({
+  const {
+    form,
+    handleSubmit,
+    handleDeleteTask,
+    setOpenCategoryDialog,
+    isDeleting,
+    openCategoryDialog,
+    isLoading,
+    itemsFieldArray,
+  } = useTaskForm({
     mode,
     type,
     taskId,
@@ -249,6 +267,43 @@ export default function DialogFormTask({
                     ? "Salvar Alterações"
                     : "Criar tarefa"}
               </Button>
+              {taskId && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Deletar tarefa
+                    </Button>
+                  </AlertDialogTrigger>
+
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="flex items-center gap-2">
+                        <Icons.AlertTriangle className="h-5 w-5 text-destructive" />
+                        Deseja realmente deletar esta tarefa?
+                      </AlertDialogTitle>
+
+                      <AlertDialogDescription>
+                        Essa ação não poderá ser desfeita. A tarefa será
+                        removida permanentemente.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+
+                      <AlertDialogAction
+                        onClick={() => handleDeleteTask(taskId)}
+                        disabled={isDeleting}
+                        className="bg-destructive hover:bg-destructive/90"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        {isDeleting ? "Deletando..." : "Deletar"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </DialogFooter>
           </form>
         </DialogContent>

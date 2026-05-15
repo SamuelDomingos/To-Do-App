@@ -1,7 +1,6 @@
-import { Suspense } from "react"
 import { getCategories } from "./_services/getCategoriesService"
 import Error from "@/components/error"
-import { EmptyState } from "../tasks/_components/empty-state"
+import { EmptyState } from "@/components/empty-state"
 import { CategoryCard } from "./_components/categoryCard"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { CategoryDialog } from "./_components/CategoryDialog"
